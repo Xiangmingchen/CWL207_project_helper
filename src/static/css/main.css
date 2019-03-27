@@ -1,0 +1,13 @@
+.img-container {
+  height: 100vh;
+  /* background-color: red; */
+}
+.justify-center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.text-display-container {
+  height: 100vh;
+  background-color: green;
+}
