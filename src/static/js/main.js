@@ -1,8 +1,10 @@
-// Read input file
-function recognizeUploadedImage() {
-  var file = document.getElementById("upload").files[0];
-  console.log(file)
-  Tesseract.recognize(file)
+/**
+ * Recognize the text in an image 
+ *
+ * @param {ImageLike} image https://github.com/naptha/tesseract.js#imagelike
+ */
+function recognizeImage(image) {
+  Tesseract.recognize(image)
          .then(function(result) {
             document.getElementById("ocr_results")
                     .innerText = result.text;
@@ -13,7 +15,10 @@ function recognizeUploadedImage() {
         });
 }
 
-// Upload file
+/**
+ * Load files that user uploaded. Take care of different file types.
+ *
+ */
 function uploadFile() {
   var file = document.getElementById("upload").files[0];
   
@@ -28,7 +33,12 @@ function uploadFile() {
 
 }
 
-// Load pdf
+/**
+ * Load pdf and convert it into a image.
+ *
+ * @param {File} file File that user uploaded
+ * @returns {image} Image that's converted from the pdf
+ */
 function loadPdf(file) {
   var file_url = URL.createObjectURL(file);
 
