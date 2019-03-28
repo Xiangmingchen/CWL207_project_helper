@@ -20,8 +20,10 @@
         <!-- upload image -->
         <div class="col-6 col-md-3 justify-center">
           <p>Upload image</p>
-          <input type="file" id="newspaper-upload" class="custom-file-input">
+          <input type="file" onchange="recognizeUploadedImage()" id="newspaper-upload" class="custom-file-input">
           <label class="custon-file-label" for="newspaper-upload">Choose</label>
+          <div id="ocr_results"> </div>
+          <div id="ocr_status"> </div>
         </div>
       </div>
 
@@ -30,6 +32,7 @@
       </div>
     </div>
   </div>
-  <script src="static/js/scripts.js"></script>
+  <script src='https://cdn.jsdelivr.net/gh/naptha/tesseract.js@v1.0.14/dist/tesseract.min.js'></script>
+  <script src="static/js/main.js"></script>
 </body>
 </html>
