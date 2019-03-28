@@ -1,6 +1,6 @@
 // Read input file
 function recognizeUploadedImage() {
-  var file = document.getElementById("newspaper-upload").files[0];
+  var file = document.getElementById("upload").files[0];
   console.log(file)
   Tesseract.recognize(file)
          .then(function(result) {
