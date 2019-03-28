@@ -1,3 +1,10 @@
+/** Selector names **/
+const newspaper_input = "#upload-newspaper"
+const newspaper_label = "#upload-newspaper-label"
+const newspaper_error = "#newspaper-error"
+
+
+
 /**
  * Recognize the text in an image 
  *
@@ -6,12 +13,10 @@
 function recognizeImage(image) {
   Tesseract.recognize(image)
          .then(function(result) {
-            document.getElementById("ocr_results")
-                    .innerText = result.text;
+            $("#ocr_results").text(result.text)
          }).progress(function(result) {
-            document.getElementById("ocr_status")
-                    .innerText = result["status"] + " (" +
-                        (result["progress"] * 100) + "%)";
+            $("#ocr_status").text( result["status"] + " (" +
+                        (result["progress"] * 100) + "%)")
         });
 }
 
@@ -20,15 +25,22 @@ function recognizeImage(image) {
  *
  */
 function uploadFile() {
-  var file = document.getElementById("upload").files[0];
+  var file = $(newspaper_input)[0].files[0];
   
   // load the file according to its type
-  if (!file) {
+  if (!file) { // if canceled
     return
-  } else if (file.type === "application/pdf") {
-    loadPdf(file)
   } else {
-    console.log(file.type)
+    // hide the error msg div
+    $(newspaper_error).addClass("d-none")
+
+    // process the file
+    if (file.type === "application/pdf") {
+      loadPdf(file)
+    } else {
+      console.log(file.type)
+      $(newspaper_label).text(file.name)
+    }
   }
 
 }
@@ -46,6 +58,20 @@ function loadPdf(file) {
   pdfjsLib.GlobalWorkerOptions.workerSrc = 'static/js/pdf.worker.js';
   pdfjsLib.getDocument({ url: file_url })
     .then(function(pdf_doc) {
-      console.log(pdf_doc.numPages)
+      // check page number
+      if (pdf_doc.numPages !== 1) {
+        var errorMsg = "Please upload a pdf with only 1 page"
+        displayError(newspaper_error, errorMsg);
+        return
+      }
+
+      console.log(`${file.name} has ${pdf_doc.numPages} pages`)
+      $(newspaper_label).text(file.name)
     })
 }
+
+function displayError(divSelector, errorMessage) {
+  $(divSelector).text(errorMessage)
+      .removeClass("d-none")
+}
+
