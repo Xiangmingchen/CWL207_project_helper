@@ -12,3 +12,30 @@ function recognizeUploadedImage() {
                         (result["progress"] * 100) + "%)";
         });
 }
+
+// Upload file
+function uploadFile() {
+  var file = document.getElementById("upload").files[0];
+  
+  // load the file according to its type
+  if (!file) {
+    return
+  } else if (file.type === "application/pdf") {
+    loadPdf(file)
+  } else {
+    console.log(file.type)
+  }
+
+}
+
+// Load pdf
+function loadPdf(file) {
+  var file_url = URL.createObjectURL(file);
+
+  // Load pdf with pdf.js
+  pdfjsLib.GlobalWorkerOptions.workerSrc = 'static/js/pdf.worker.js';
+  pdfjsLib.getDocument({ url: file_url })
+    .then(function(pdf_doc) {
+      console.log(pdf_doc.numPages)
+    })
+}
