@@ -18,12 +18,33 @@
       <!-- left side -->
       <div class="col-12 col-md-6 img-container justify-center">
         <!-- upload image -->
-        <div class="col-6 col-md-3 justify-center">
-          <p>Upload image</p>
-          <input type="file" onchange="recognizeUploadedImage()" id="newspaper-upload" class="custom-file-input">
-          <label class="custon-file-label" for="newspaper-upload">Choose</label>
-          <div id="ocr_results"> </div>
-          <div id="ocr_status"> </div>
+        <div class="row">
+          <div class="col-6 col-md-3 justify-center">
+            <p>Upload image</p>
+            <input type="file" onchange="recognizeUploadedImage()" id="newspaper-upload" class="custom-file-input">
+            <label class="custon-file-label" for="newspaper-upload">Choose</label>
+            <div id="ocr_results"> </div>
+            <div id="ocr_status"> </div>
+          </div>
+        </div>
+        <div class="row">
+          <div class='col-sm-6'>
+            <div class="form-group">
+                <div class='input-group date' id='datetimepicker1'>
+                    <input type='text' class="form-control" />
+                    <span class="input-group-addon">
+                        <span class="glyphicon glyphicon-calendar"></span>
+                    </span>
+                </div>
+            </div>
+          </div>
+        <script type="text/javascript">
+            $(function () {
+                $('#datetimepicker').datetimepicker();
+                viewMode: 'years',
+                format: 'DD/MM/YYYY'
+            });
+        </script>
         </div>
       </div>
 
@@ -31,6 +52,7 @@
       <div class="col-12 col-md-6 text-display-container">
       </div>
     </div>
+
   </div>
   <script src='https://cdn.jsdelivr.net/gh/naptha/tesseract.js@v1.0.14/dist/tesseract.min.js'></script>
   <script src="static/js/main.js"></script>
