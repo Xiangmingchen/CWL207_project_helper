@@ -2,7 +2,15 @@
 const newspaper_input = "#upload-newspaper"
 const newspaper_label = "#upload-newspaper-label"
 const newspaper_error = "#newspaper-error"
+const pdf_canvas = "#pdf-canvas"
+const left_side = "#left-side"
+const form_container = "#form-container"
 
+/** global variables **/
+var __PDF_DOC,
+  __CANVAS = $(pdf_canvas).get(0),
+  __CANVAS_CTX = __CANVAS.getContext('2d'),
+  __IMGAE_URL;
 
 
 /**
@@ -31,18 +39,26 @@ function uploadFile() {
   if (!file) { // if canceled
     return
   } else {
-    // hide the error msg div
-    $(newspaper_error).addClass("d-none")
-
     // process the file
     if (file.type === "application/pdf") {
       loadPdf(file)
     } else {
-      console.log(file.type)
+      loadImage(file)
+      console.log(file)
       $(newspaper_label).text(file.name)
     }
   }
 
+}
+
+function loadImage(file) {
+  var reader = new FileReader();
+
+  reader.onload = (event) => {
+    __IMGAE_URL = event.target.result;
+  }
+
+  reader.readAsDataURL(file);
 }
 
 /**
@@ -57,21 +73,76 @@ function loadPdf(file) {
   // Load pdf with pdf.js
   pdfjsLib.GlobalWorkerOptions.workerSrc = 'static/js/pdf.worker.js';
   pdfjsLib.getDocument({ url: file_url })
-    .then(function(pdf_doc) {
+    .then(function(pdf) {
+      // assign global variable
+      __PDF_DOC = pdf
+
       // check page number
-      if (pdf_doc.numPages !== 1) {
+      if (__PDF_DOC.numPages !== 1) {
         var errorMsg = "Please upload a pdf with only 1 page"
         displayError(newspaper_error, errorMsg);
         return
       }
 
-      console.log(`${file.name} has ${pdf_doc.numPages} pages`)
+      // hide previous error message
+      $(newspaper_error).hide();
+
+      // display file name to user
       $(newspaper_label).text(file.name)
+
+      // convert pdf to png
+      convertPdfToPng();
     })
 }
 
-function displayError(divSelector, errorMessage) {
-  $(divSelector).text(errorMessage)
-      .removeClass("d-none")
+function convertPdfToPng() {
+  // get first page of the pdf
+  __PDF_DOC.getPage(1).then((page) => {
+    var viewport = page.getViewport(1);
+    var renderContext = {
+			canvasContext: __CANVAS_CTX,
+			viewport: viewport
+		};
+
+    __CANVAS.width = viewport.width;
+    __CANVAS.height = viewport.height;
+
+    // render the pdf on canvas
+    page.render(renderContext).then(() => {
+      // then convert canvas to png
+      __IMGAE_URL = __CANVAS.toDataURL();
+    })
+  })
 }
 
+/**
+ * Display error with given selector and error message
+ *
+ * @param {string} divSelector the selector for jquery of the div, 
+ * include '#' if it's an id
+ * @param {string} errorMessage The error message to display
+ */
+function displayError(divSelector, errorMessage) {
+  $(divSelector).text(errorMessage).show();
+}
+
+function start() {
+  validateInputs();
+
+  // hide the input form
+  $(form_container).hide();
+
+  // diaplay image
+  $(left_side).css("background-image", `url(${__IMGAE_URL})`)
+}
+
+function validateInputs() {
+
+}
+
+/** 
+ * This executes when the html loads
+ */
+$(() => {
+
+})
