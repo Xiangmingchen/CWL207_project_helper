@@ -4,6 +4,7 @@
   "description": "",
   "main": "index.js",
   "dependencies": {
+    "js-datepicker": "^4.0.10",
     "tesseract.js": "^1.0.14"
   },
   "devDependencies": {},

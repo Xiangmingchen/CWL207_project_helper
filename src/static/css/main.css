@@ -1,6 +1,9 @@
 .img-container {
   height: 100vh;
   /* background-color: red; */
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
 }
 .justify-center {
   display: flex;
@@ -10,4 +13,11 @@
 .text-display-container {
   height: 100vh;
   background-color: green;
+}
+
+.hide-on-load {
+  display: none;
+}
+.custom-file-label {
+  overflow: hidden;
 }
