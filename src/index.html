@@ -10,6 +10,7 @@
 
   <link rel="stylesheet" href="static/css/main.css">
   <link rel="stylesheet" href="static/css/bootstrap.min.css">
+  <link rel="stylesheet" href="static/css/datepicker.min.css">
 </head>
 
 <body>
@@ -50,7 +51,7 @@
 
           <!-- date input -->
           <div class="col-12 offset-md-3 col-md-6 mt-3">
-            <input class="form-control" type="date" value="1970-03-01" onchange="dateChange()" id="date-input">
+            <input class="form-control" type="date" onchange="dateChange()" id="date-input" onkeydown="return false;">
           </div>
 
 
@@ -72,6 +73,7 @@
   </div>
   <script src='https://cdn.jsdelivr.net/gh/naptha/tesseract.js@v1.0.14/dist/tesseract.min.js'></script>
   <script src="static/js/jquery-3.3.1.min.js"></script>
+  <script src="static/js/datepicker.min.js"></script>
   <script src="static/js/pdf.js"></script>
   <script src="static/js/pdf.worker.js"></script>
   <script src="static/js/main.js"></script>
