@@ -18,3 +18,6 @@
 .hide-on-load {
   display: none;
 }
+.custom-file-label {
+  overflow: hidden;
+}
