@@ -2,15 +2,22 @@
 const newspaper_input = "#upload-newspaper"
 const newspaper_label = "#upload-newspaper-label"
 const newspaper_error = "#newspaper-error"
+const newspaper_loading = "#newspaper-loading"
+const template_input = "#upload-template"
+const template_label = "#upload-template-label"
+const template_error = "#template-error"
 const pdf_canvas = "#pdf-canvas"
 const left_side = "#left-side"
 const form_container = "#form-container"
+const date_input = "#date-input"
 
 /** global variables **/
 var __PDF_DOC,
   __CANVAS = $(pdf_canvas).get(0),
   __CANVAS_CTX = __CANVAS.getContext('2d'),
-  __IMGAE_URL;
+  __IMGAE_URL,
+  __EXCEL, 
+  __DATE;
 
 
 /**
@@ -32,30 +39,53 @@ function recognizeImage(image) {
  * Load files that user uploaded. Take care of different file types.
  *
  */
-function uploadFile() {
+function uploadNewspaper() {
   var file = $(newspaper_input)[0].files[0];
   
   // load the file according to its type
   if (!file) { // if canceled
     return
   } else {
+    // hide previous error message
+    $(newspaper_error).hide();
+
     // process the file
     if (file.type === "application/pdf") {
       loadPdf(file)
     } else {
       loadImage(file)
-      console.log(file)
-      $(newspaper_label).text(file.name)
     }
   }
 
 }
 
+function uploadTemplate() {
+  var file = $(template_input)[0].files[0];
+
+  if (!file) {
+    return
+  }
+
+  $(template_error).hide();
+  $(template_label).text(file.name);
+  __EXCEL = file;
+}
+
 function loadImage(file) {
+  // display loading
+  $(newspaper_loading).show();
+  // display file name
+  $(newspaper_label).text(file.name)
+
+  // read the image
   var reader = new FileReader();
 
   reader.onload = (event) => {
+    // set image url
     __IMGAE_URL = event.target.result;
+
+    // hide loading
+    $(newspaper_loading).hide();
   }
 
   reader.readAsDataURL(file);
@@ -84,8 +114,8 @@ function loadPdf(file) {
         return
       }
 
-      // hide previous error message
-      $(newspaper_error).hide();
+      // display loading
+      $(newspaper_loading).show();
 
       // display file name to user
       $(newspaper_label).text(file.name)
@@ -111,6 +141,9 @@ function convertPdfToPng() {
     page.render(renderContext).then(() => {
       // then convert canvas to png
       __IMGAE_URL = __CANVAS.toDataURL();
+
+      // hide loading
+      $(newspaper_loading).hide();
     })
   })
 }
@@ -126,8 +159,13 @@ function displayError(divSelector, errorMessage) {
   $(divSelector).text(errorMessage).show();
 }
 
+/**
+ * When start button is clicked
+ */
 function start() {
-  validateInputs();
+  if (!validateInputs()) {
+    return
+  }
 
   // hide the input form
   $(form_container).hide();
@@ -137,7 +175,28 @@ function start() {
 }
 
 function validateInputs() {
+  var valid = true;
+  if (!__IMGAE_URL) {
+    displayError(newspaper_error, "Please select a file")
+    valid = false;
+  }
 
+  if (!__EXCEL) {
+    displayError(template_error, "Please select a file")
+    valid = false;
+  }
+
+  __DATE = $(date_input).val();
+  if (!__DATE) {
+    $(date_input).addClass("text-danger");
+    valid = false;
+  }
+
+  return valid;
+}
+
+function dateChange() {
+  $(date_input).removeClass("text-danger")
 }
 
 /** 
