@@ -21,3 +21,12 @@
 .custom-file-label {
   overflow: hidden;
 }
+
+#rectangle {
+  border: 2px dashed;
+  position: absolute;
+}
+
+#select-btn {
+  display: inline-block;
+}

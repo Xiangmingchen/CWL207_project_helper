@@ -19,7 +19,11 @@ var __PDF_DOC,
   __EXCEL, 
   __DATE;
 
-var input_date_picker;
+var input_date_picker, 
+  rectangle_selector, resizingRect = true, x1 = 0, y1 = 0, x2 = 0, y2 = 0,
+  select_button,
+  stage = 0
+;
 
 /**
  * Recognize the text in an image 
@@ -173,6 +177,8 @@ function start() {
 
   // diaplay image
   $(left_side).css("background-image", `url(${__IMGAE_URL})`)
+
+  stage = 1;
 }
 
 function validateInputs() {
@@ -182,10 +188,11 @@ function validateInputs() {
     valid = false;
   }
 
-  if (!__EXCEL) {
-    displayError(template_error, "Please select a file")
-    valid = false;
-  }
+  // for debugging purpose
+  // if (!__EXCEL) {
+  //   displayError(template_error, "Please select a file")
+  //   valid = false;
+  // }
 
   __DATE = $(date_input).val();
   if (!__DATE) {
@@ -200,6 +207,55 @@ function dateChange() {
   $(date_input).removeClass("text-danger")
 }
 
+/**
+ * Reposition the dashed rectangle when user is selecting an area
+ */
+function repositionRectangle() { 
+  var x3 = Math.min(x1,x2); //Smaller X
+  var x4 = Math.max(x1,x2); //Larger X
+  var y3 = Math.min(y1,y2); //Smaller Y
+  var y4 = Math.max(y1,y2); //Larger Y
+  rectangle_selector.css({
+    top: y3,
+    left: x3,
+    width: x4 - x3,
+    height: y4 - y3,
+  })
+}
+
+function showSelectButton() {
+  select_button.show();
+}
+
+onmousedown = function(e) {
+  if (stage != 1) {
+    return;
+  }
+  rectangle_selector.show();
+  select_button.hide();
+  x1 = e.clientX; //Set the initial X
+  y1 = e.clientY; //Set the initial Y
+  x2 = e.clientX; //Set the initial X
+  y2 = e.clientY; //Set the initial Y
+  repositionRectangle();
+  resizingRect = true;
+};
+onmousemove = function(e) {
+  if (stage != 1 || !resizingRect) {
+    return;
+  }
+  x2 = e.clientX; //Update the current position X
+  y2 = e.clientY; //Update the current position Y
+  repositionRectangle();
+};
+onmouseup = function(e) {
+  if (stage != 1) {
+    return;
+  }
+  resizingRect = false;
+  select_button.show()
+};
+
 /** 
  * This executes when the html loads
  */
@@ -210,4 +266,8 @@ $(() => {
     },
     dateSelected: new Date(1970, 2, 1),
   })
+
+  rectangle_selector = $("#rectangle");
+  select_button = $("#select-btn");
 })
+
