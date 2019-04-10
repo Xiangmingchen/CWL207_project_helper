@@ -99,8 +99,12 @@ function removeTheather(event) {
 }
 
 function addEntry() {
+  if (!validateInputs()) {
+    return
+  }
+
   let entry = {
-    date: $("#date")[0].value,
+    date: $("#month").text() + "-" + $("#date")[0].value,
     movieName: $("#movie-name")[0].value,
     theaterNames: currTheaterNames,
   }
@@ -115,20 +119,37 @@ function addEntry() {
   })
 }
 
+function validateInputs() {
+  return true; //TODO
+}
+
 function hideAlert() {
   $("#success-alert").hide();
+}
+
+function finishAndDownload() {
+  window.open('/downloadExcel')
 }
 
 /** 
  * This executes when the html loads
  */
 $(() => {
+  let minDate = new Date($("#month").text() + "-01");
+  minDate.setDate(minDate.getDate() + 1)
+  let maxDate = new Date(minDate);
+  maxDate.setMonth(maxDate.getMonth() + 1)
+  maxDate.setDate(0)
+
   date_picker = datepicker(document.querySelector("#date"), {
     formatter: (el, date, instance) => {
-      el.value = date.toISOString().split('T')[0];
+      el.value = date.toISOString().split('T')[0].slice(-2);
     },
-    dateSelected: new Date(1970, 2, 1),
+    minDate: minDate,
+    maxDate: maxDate,
+    dateSelected: minDate
   })
 
   $("#add-entry").click(addEntry)
+  $("#finish").click(finishAndDownload)
 })

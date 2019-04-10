@@ -10,6 +10,8 @@ var sendFileOptions = {
   root: __dirname + '/views/',
 }
 
+var downloadDir = '/download/';
+
 // set up 
 app.set('view engine', 'ejs') // use ejs redner views
 app.use(express.urlencoded({ extended: true })) // use parser to parse request
@@ -39,13 +41,19 @@ app.post('/rawinput', (req, res) => {
     var workbook = XLSX.read(req.files.excel.data, { type: 'buffer' })
 
     req.session.excel = workbook;
+    req.session.entryList = []
   }
 
-  res.render('rawinput')
+  res.render('rawinput', {
+    month: req.body.month
+  })
 })
 
 // return a excel workbook object
 app.get('/excelinfo', (req, res) => {
+  if (!req.session.excel) {
+    throw new Error("No excel sheet uploaded!")
+  }
   res.send(req.session.excel)
 })
 
@@ -89,7 +97,7 @@ app.post('/addentry', (req, res) => {
 
   // look for the date in the entry list
   for (let i = 0; i < req.session.entryList.length; i += 1) {
-    if (req.session.entryList[i].date == newEntry.date) {
+    if (req.session.entryList[i].date === newEntry.date) {
       dateIndex = i;
       break;
     }
@@ -114,11 +122,89 @@ app.post('/addentry', (req, res) => {
     req.session.entryList[dateIndex].movies.push(newMovieEntry);
   }
 
-  console.log(req.session.entryList)
 
   // success
   res.sendStatus(200)
 })
+
+/**
+ * Fill up the excel sheet based on current entry list
+ * Write workbook to server and respond with download link
+ */
+app.get("/downloadExcel", (req, res) => {
+  if (!req.session.entryList) {
+    throw new Error("No entry yet")
+  }
+
+  if (!req.session.excel) {
+    throw new Error("No excel uploaded");
+  }
+
+  // sort the array by date
+  sortByDate(req.session.entryList)
+
+  // get first worksheet
+  var workbook = req.session.excel;
+  var worksheet = workbook.Sheets[workbook.SheetNames[0]];
+  // create theater to row number map if we don't have one
+  if (!req.session.theaterToRow) {
+    req.session.theaterToRow = buildTheaterToRowMap(worksheet)
+  }
+
+  let entryList = req.session.entryList;
+  let theaterToRow = req.session.theaterToRow;
+
+  // loop through each date
+  for (let col = 1, i = 0; i < entryList.length; i += 1, col += 1) {
+    // write date to top cell
+    let topCell = worksheet[XLSX.utils.encode_cell({ r: 0, c: col })]
+    let date = new Date(entryList[i].date + "Z");
+    let UTCString = date.toUTCString().split(" ");
+    let dateString = [ UTCString[1], UTCString[2], UTCString[3].slice(2) ].join("-")
+    topCell.v = dateString;
+
+    // loop through each movie
+    entryList[i].movies.forEach((movie) => {
+      // loop through each theater
+      movie.theaterNames.forEach((theaterName) => {
+        // write movie name to that cell
+        let row = theaterToRow[theaterName];
+        let cellAddress = XLSX.utils.encode_cell({ r: row, c: col });
+        if (!worksheet[cellAddress]) {
+          worksheet[cellAddress] = { t: 's' }
+        }
+        worksheet[cellAddress].v = movie.movieName
+      })
+    })
+  }
+
+  // write to file
+  //// TODO better name to avoid conflict
+  let fileName = __dirname + downloadDir + 'yournetid_main.xlsx'
+  XLSX.writeFile(workbook, fileName) 
+  res.download(fileName);
+})
+
+function sortByDate(array) {
+  array.sort((a, b) => {
+    return new Date(a.date) > new Date(b.date)
+  })
+}
+
+function buildTheaterToRowMap(worksheet) {
+  let cell = worksheet["A2"];
+  let col = "A";
+  let theaterToRow = {};
+  let row = 2;
+
+  while (cell != undefined) {
+    theaterToRow[cell.v] = row
+    row += 1
+    cell = worksheet[col + row];
+  }
+
+  return theaterToRow;
+}
 
 // port
 app.listen(3000, () => {

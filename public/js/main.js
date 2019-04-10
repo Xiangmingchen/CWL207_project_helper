@@ -19,7 +19,7 @@ var __PDF_DOC,
   __EXCEL, 
   __DATE;
 
-var input_date_picker;
+var month_picker;
 
 /**
  * Recognize the text in an image 
@@ -196,3 +196,14 @@ function validateInputs() {
   return valid;
 }
 
+/** 
+ * This executes when the html loads
+ */
+$(() => {
+  month_picker = datepicker(document.querySelector(date_input), {
+    formatter: (el, date, instance) => {
+      el.value = date.toISOString().split('T')[0].slice(0, -3);
+    },
+    dateSelected: new Date(1970, 2, 1),
+  })
+})
