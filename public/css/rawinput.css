@@ -1,0 +1,6 @@
+.uniformed-btn {
+  min-width: 175px;
+}
+.hover-delete:hover {
+  text-decoration: line-through !important;
+}
