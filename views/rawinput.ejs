@@ -9,34 +9,43 @@
   <link rel="stylesheet" href="/css/main.css">
   <link rel="stylesheet" href="/css/rawinput.css">
   <link rel="stylesheet" href="/css/bootstrap.min.css">
+  <link rel="stylesheet" href="css/datepicker.min.css">
   <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.1/css/all.css" integrity="sha384-50oBUHEmvpQ+1lW4y57PTFmhCaXp0ML5d60M1M7uH2+nqUivzIebhndOJK28anvf" crossorigin="anonymous">
 </head>
 
 <body>
-  <div class="container">
-    <div class="row mt-4">
-      <!-- inputs -->
-      <div class="col-12 text-center">
-        <h5>Date: <%= date %><button class="btn btn-outline-info btn-sm ml-2" id="next-day">Next</button></h5>
+  <div class="container pt-4">
+    <!-- date -->
+    <div class="row">
+      <div class="col-md-6 offset-md-3 col-12">
+        <div class="form-group">
+          <label for="date">Date</label>
+          <input name="date" class="form-control" type="date" id="date" onchange="hideAlert()" onkeydown="return false;" aria-describedby="date">
+        </div>
       </div>
     </div>
+    <!-- movie name -->
     <div class="row">
       <div class="col-md-6 offset-md-3 col-12">
         <div class="form-group">
           <label for="movie-name">Movie Name</label>
-          <input type="text" class="form-control" id="movie-name" aria-describedby="movieName">
+          <input type="text" class="form-control" id="movie-name" onchange="hideAlert()" aria-describedby="movieName">
         </div>
       </div>
     </div>
+    <!-- theater names -->
     <div class="row">
       <div class="col-md-6 offset-md-3 col-12">
         <div class="form-group">
           <label for="theater-names">Theater Names</label>
           <div class="dropdown">
             <div class="input-group">
-              <input type="text" class="form-control" oninput="fuzzySearchTheater();" id="theater-names" aria-describedby="TheaterNames" aria-haspopup="true" aria-expanded="false">
+              <!-- search bar -->
+              <input type="text" class="form-control" oninput="fuzzySearchTheater();" onchange="hideAlert()" id="theater-names" aria-describedby="TheaterNames" aria-haspopup="true" aria-expanded="false">
 
+              <!-- unclickable drop down toggle, only toggle through js -->
               <div class="d-none dropdown-toggle" data-toggle="dropdown"></div>
+              <!-- drop down -->
               <div class="dropdown-menu" aria-labelledby="theaterSearchResult" id="theater-dropdown">
                 <div class="text-center">No result</div>
               </div>
@@ -48,18 +57,20 @@
             </div>
           </div>
           
-          <div class="mt-2" id="theater-names-conatiner">
-            <div class="btn btn-outline-primary hover-delete">Naaz</div>
-          </div>
+          <!-- added theater name container -->
+          <div class="mt-2" id="theater-names-conatiner"></div>
         </div>
+      </div>
+    </div>
+    <!-- success alert -->
+    <div class="row">
+      <div class="col-md-6 offset-md-3 col-12">
+        <div class="alert alert-success hide-on-load" role="alert" id="success-alert">Successfully saved entry</div>
       </div>
     </div>
     <!-- buttons -->
     <div class="row justify-center">
       <button class="btn btn-primary uniformed-btn" id="add-entry">Add entry</button>
-    </div>
-    <div class="row justify-center mt-2">
-      <button class="btn btn-outline-secondary uniformed-btn" id="pick-day">Pick new day</button>
     </div>
     <div class="row justify-center mt-2">
       <button class="btn btn-outline-success uniformed-btn" id="finish">Finish and download</button>
@@ -69,6 +80,7 @@
   <script src="/js/jquery-3.3.1.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
   <script src="/js/bootstrap.min.js"></script>
+  <script src="/js/datepicker.min.js"></script>
   <script src="/js/fuse.js"></script>
   <script src="/js/rawinput.js"></script>
 

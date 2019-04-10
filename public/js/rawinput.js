@@ -9,6 +9,7 @@ var searchOptions = {       // search options for Fuse.js
   minMatchCharLength: 1,
   keys: [ "name" ]
 }
+var date_picker;            // date picker
 
 /**
  * Search for theaters in the excel sheet first column, show 
@@ -75,6 +76,7 @@ function getTheaterNames(callback) {
 function addTheather(event) {
   var theaterName = $(event.target).text();
   if (!currTheaterNames.includes(theaterName)) {
+    $("#theater-names").val("")
     currTheaterNames.push(theaterName)
     $("#theater-names-conatiner").append(`<div class="btn btn-outline-primary hover-delete mr-2 mb-2">${theaterName}</div>`)
       .children().last().click(removeTheather)
@@ -97,5 +99,36 @@ function removeTheather(event) {
 }
 
 function addEntry() {
-
+  let entry = {
+    date: $("#date")[0].value,
+    movieName: $("#movie-name")[0].value,
+    theaterNames: currTheaterNames,
+  }
+  $.post("/addentry", entry, (data, status) => {
+    // clear form
+    $("#theater-names-conatiner").empty();
+    $("#theater-names").val("")
+    $("#movie-name").val("")
+    currTheaterNames = [];
+    // show success
+    $("#success-alert").show();
+  })
 }
+
+function hideAlert() {
+  $("#success-alert").hide();
+}
+
+/** 
+ * This executes when the html loads
+ */
+$(() => {
+  date_picker = datepicker(document.querySelector("#date"), {
+    formatter: (el, date, instance) => {
+      el.value = date.toISOString().split('T')[0];
+    },
+    dateSelected: new Date(1970, 2, 1),
+  })
+
+  $("#add-entry").click(addEntry)
+})

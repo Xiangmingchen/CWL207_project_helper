@@ -196,18 +196,3 @@ function validateInputs() {
   return valid;
 }
 
-function dateChange() {
-  $(date_input).removeClass("text-danger")
-}
-
-/** 
- * This executes when the html loads
- */
-$(() => {
-  input_date_picker = datepicker(document.querySelector(date_input), {
-    formatter: (el, date, instance) => {
-      el.value = date.toISOString().split('T')[0];
-    },
-    dateSelected: new Date(1970, 2, 1),
-  })
-})
