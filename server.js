@@ -10,6 +10,8 @@ var sendFileOptions = {
   root: __dirname + '/views/',
 }
 
+var port = process.env.PORT || 3000
+
 var downloadDir = '/download/';
 
 // set up 
@@ -207,7 +209,7 @@ function buildTheaterToRowMap(worksheet) {
 }
 
 // port
-app.listen(3000, () => {
-  console.log("App listening on port 3000")
+app.listen(port, () => {
+  console.log(`App listening on port ${port}`)
 })
 
