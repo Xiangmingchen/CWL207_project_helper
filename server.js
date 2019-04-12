@@ -2,6 +2,7 @@ const express = require('express')
 const fileUpload = require('express-fileupload')
 const session = require('express-session')
 const XLSX = require('xlsx')
+const mkdirp = require('mkdirp')
 
 const app = express()
 
@@ -10,7 +11,7 @@ var sendFileOptions = {
   root: __dirname + '/views/',
 }
 
-var port = process.env.PORT || 3000
+var port = process.env.PORT || 3001
 
 var downloadDir = '/download/';
 
@@ -43,8 +44,10 @@ app.post('/rawinput', (req, res) => {
     var workbook = XLSX.read(req.files.excel.data, { type: 'buffer' })
 
     req.session.excel = workbook;
-    req.session.entryList = []
   }
+
+  // month in the form "1970-01" of string
+  req.session.month = req.body.month
 
   res.render('rawinput', {
     month: req.body.month
@@ -133,17 +136,15 @@ app.post('/addentry', (req, res) => {
  * Fill up the excel sheet based on current entry list
  * Write workbook to server and respond with download link
  */
-app.get("/downloadExcel", (req, res) => {
-  if (!req.session.entryList) {
-    throw new Error("No entry yet")
-  }
-
+app.post("/generateExcel", (req, res) => {
+  // if the current session doesn't have excel
   if (!req.session.excel) {
-    throw new Error("No excel uploaded");
+    res.status(400) .send({
+        message: "Please reupload excel template",
+        code: 1,
+      })
+    return
   }
-
-  // sort the array by date
-  sortByDate(req.session.entryList)
 
   // get first worksheet
   var workbook = req.session.excel;
@@ -153,38 +154,78 @@ app.get("/downloadExcel", (req, res) => {
     req.session.theaterToRow = buildTheaterToRowMap(worksheet)
   }
 
-  let entryList = req.session.entryList;
-  let theaterToRow = req.session.theaterToRow;
-
-  // loop through each date
-  for (let col = 1, i = 0; i < entryList.length; i += 1, col += 1) {
-    // write date to top cell
+  // overwrite the first row 
+  let secondDayOfMon = new Date(req.session.month + "-02Z");
+  let UTCString = secondDayOfMon.toUTCString().split(" ");
+  for (let col = 1; col < daysInMonth(req.session.month) + 1; col += 1) {
     let topCell = worksheet[XLSX.utils.encode_cell({ r: 0, c: col })]
-    let date = new Date(entryList[i].date + "Z");
-    let UTCString = date.toUTCString().split(" ");
-    let dateString = [ UTCString[1], UTCString[2], UTCString[3].slice(2) ].join("-")
+    if (!topCell) {
+      worksheet[XLSX.utils.encode_cell({ r: 0, c: col })] = {}
+      topCell = worksheet[XLSX.utils.encode_cell({ r: 0, c: col })];
+    }
+    let dateString = [ col, UTCString[2], UTCString[3].slice(2) ].join("-")
     topCell.v = dateString;
-
-    // loop through each movie
-    entryList[i].movies.forEach((movie) => {
-      // loop through each theater
-      movie.theaterNames.forEach((theaterName) => {
-        // write movie name to that cell
-        let row = theaterToRow[theaterName];
-        let cellAddress = XLSX.utils.encode_cell({ r: row, c: col });
-        if (!worksheet[cellAddress]) {
-          worksheet[cellAddress] = { t: 's' }
-        }
-        worksheet[cellAddress].v = movie.movieName
-      })
-    })
   }
 
-  // write to file
+  // delete everything that's after the last day of month on the 
+  // first row
+  for (let col = daysInMonth(req.session.month) + 1; col <= XLSX.utils.decode_range(worksheet['!ref']).e.c; col += 1) {
+    let topCell = worksheet[XLSX.utils.encode_cell({ r: 0, c: col })]
+    if (topCell) {
+      topCell.v = "";
+    }
+  }
+
+  // write the movies to the excel sheet
+  if (req.session.entryList) {
+    // sort the array by date
+    sortByDate(req.session.entryList)
+
+    let entryList = req.session.entryList;
+    let theaterToRow = req.session.theaterToRow;
+
+    // loop through each date
+    for (let i = 0; i < entryList.length; i += 1) {
+      // write date to top cell
+      let date = new Date(entryList[i].date + "Z");
+      let UTCString = date.toUTCString().split(" ");
+      let col = parseInt(UTCString[1])
+
+      // loop through each movie
+      entryList[i].movies.forEach((movie) => {
+        // loop through each theater
+        movie.theaterNames.forEach((theaterName) => {
+          // write movie name to that cell
+          let row = theaterToRow[theaterName];
+          let cellAddress = XLSX.utils.encode_cell({ r: row, c: col });
+          if (!worksheet[cellAddress]) {
+            worksheet[cellAddress] = { t: 's' }
+          }
+          worksheet[cellAddress].v = movie.movieName
+        })
+      })
+    }
+  }
+
+  // write to file, make directory if necessory
   //// TODO better name to avoid conflict
-  let fileName = __dirname + downloadDir + 'yournetid_main.xlsx'
-  XLSX.writeFile(workbook, fileName) 
-  res.download(fileName);
+  mkdirp('download', (err) => {
+    if (err) {
+      throw err;
+    }
+    let fileName = __dirname + downloadDir + 'yournetid_main.xlsx'
+    req.session.fileName = fileName;
+    XLSX.writeFile(workbook, fileName) 
+    res.sendStatus(200)
+  })
+})
+
+app.get('/downloadExcel', (req, res) => {
+  if (!req.session.fileName) {
+    res.sendStatus(400)
+    return
+  }
+  res.download(req.session.fileName);
 })
 
 function sortByDate(array) {
@@ -206,6 +247,18 @@ function buildTheaterToRowMap(worksheet) {
   }
 
   return theaterToRow;
+}
+
+/**
+ * Return number of days in a month of a year
+ *
+ * @param {string} month a string in the form "yyyy-mm"
+ * @returns {number} number of days in this month
+ */
+function daysInMonth (yearMonthSring) {
+  let year = parseInt(yearMonthSring.slice(0, 4))
+  let month = parseInt(yearMonthSring.slice(-2))
+  return new Date(year, month, 0).getDate();
 }
 
 // port

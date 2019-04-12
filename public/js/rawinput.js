@@ -120,15 +120,43 @@ function addEntry() {
 }
 
 function validateInputs() {
-  return true; //TODO
+  let date = $("#date")[0].value;
+  if (!date) {
+    displayError("Please enter a date")
+    return false;
+  }
+
+  if (!$("#movie-name")[0].value) {
+    displayError("Please enter the movie name")
+    return false;
+  }
+
+  if (currTheaterNames.length == 0) {
+    displayError("Please enter at least one theater")
+    return false;
+  }
+
+  return true; 
 }
 
 function hideAlert() {
   $("#success-alert").hide();
+  $("#error-alert").hide()
+}
+
+function displayError(message) {
+  $("#error-alert").text(message).show()
 }
 
 function finishAndDownload() {
-  window.open('/downloadExcel')
+  $.post("/generateExcel", (fileName) => {
+    window.open('/downloadExcel')
+  }).catch((xhr) => {
+    let error = xhr.responseJSON
+    if (error.code == 1) {
+      displayError(error.message)
+    }
+  })
 }
 
 /** 

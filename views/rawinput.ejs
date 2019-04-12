@@ -34,7 +34,7 @@
       <div class="col-md-6 offset-md-3 col-12">
         <div class="form-group">
           <label for="movie-name">Movie Name</label>
-          <input type="text" class="form-control" id="movie-name" onchange="hideAlert()" aria-describedby="movieName">
+          <input type="text" class="form-control" id="movie-name" oninput="hideAlert()" aria-describedby="movieName">
         </div>
       </div>
     </div>
@@ -46,7 +46,7 @@
           <div class="dropdown">
             <div class="input-group">
               <!-- search bar -->
-              <input type="text" class="form-control" oninput="fuzzySearchTheater();" onchange="hideAlert()" id="theater-names" aria-describedby="TheaterNames" aria-haspopup="true" aria-expanded="false">
+              <input type="text" class="form-control" oninput="fuzzySearchTheater(); hideAlert();" id="theater-names" aria-describedby="TheaterNames" aria-haspopup="true" aria-expanded="false">
 
               <!-- unclickable drop down toggle, only toggle through js -->
               <div class="d-none dropdown-toggle" data-toggle="dropdown"></div>
@@ -65,6 +65,12 @@
           <!-- added theater name container -->
           <div class="mt-2" id="theater-names-conatiner"></div>
         </div>
+      </div>
+    </div>
+    <!-- error alert -->
+    <div class="row">
+      <div class="col-md-6 offset-md-3 col-12">
+        <div class="alert alert-danger hide-on-load" role="alert" id="error-alert"></div>
       </div>
     </div>
     <!-- success alert -->

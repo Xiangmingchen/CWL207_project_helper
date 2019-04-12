@@ -206,4 +206,6 @@ $(() => {
     },
     dateSelected: new Date(1970, 2, 1),
   })
+
+  $("#upload-template").change(uploadTemplate)
 })
