@@ -48,6 +48,7 @@ app.post('/rawinput', (req, res) => {
 
   // month in the form "1970-01" of string
   req.session.month = req.body.month
+  req.session.netid = req.body.netid
 
   res.render('rawinput', {
     month: req.body.month
@@ -208,12 +209,11 @@ app.post("/generateExcel", (req, res) => {
   }
 
   // write to file, make directory if necessory
-  //// TODO better name to avoid conflict
   mkdirp('download', (err) => {
     if (err) {
       throw err;
     }
-    let fileName = __dirname + downloadDir + 'yournetid_main.xlsx'
+    let fileName = __dirname + downloadDir + req.session.netid + "_main.xlsx";
     req.session.fileName = fileName;
     XLSX.writeFile(workbook, fileName) 
     res.sendStatus(200)

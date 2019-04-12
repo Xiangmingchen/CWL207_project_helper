@@ -35,8 +35,18 @@
           <!-- template error message -->
           <div class="col-12 offset-md-3 col-md-6 mt-1 text-danger hide-on-load" id="template-error"></div>
           <!-- date input -->
-          <div class="col-12 offset-md-3 col-md-6 mt-3">
+          <div class="col-2 offset-md-3 col-md-1 mt-4">
+            <label for="date-input">Month</label>
+          </div>
+          <div class="col-10 col-md-5 mt-3">
             <input name="month" class="form-control" type="text" onchange="dateChange()" id="date-input" onkeydown="return false;">
+          </div>
+          <!-- netid input -->
+          <div class="col-2 offset-md-3 col-md-1 mt-4">
+            <label for="netid">NetID</label>
+          </div>
+          <div class="col-10 col-md-5 mt-3">
+            <input name="netid" class="form-control" type="text" id="netid" required> 
           </div>
 
           <!-- start button -->
