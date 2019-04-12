@@ -10,6 +10,7 @@
     "express-fileupload": "^1.1.4",
     "express-session": "^1.15.6",
     "fuse.js": "^3.4.4",
+    "mkdirp": "^0.5.1",
     "node-tesseract": "^0.2.7",
     "xlsx": "^0.14.2"
   },
