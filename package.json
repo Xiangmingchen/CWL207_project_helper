@@ -5,17 +5,23 @@
   "main": "index.js",
   "dependencies": {
     "body-parser": "^1.18.3",
+    "connect-mongo": "^2.0.3",
     "ejs": "^2.6.1",
     "express": "^4.16.4",
     "express-fileupload": "^1.1.4",
     "express-session": "^1.15.6",
     "fuse.js": "^3.4.4",
     "mkdirp": "^0.5.1",
+    "mongodb": "^3.2.3",
+    "mongoose": "^5.5.1",
     "node-tesseract": "^0.2.7",
     "xlsx": "^0.14.2"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "nodemon": "^1.18.11"
+  },
   "scripts": {
+      "dev": "nodemon server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {

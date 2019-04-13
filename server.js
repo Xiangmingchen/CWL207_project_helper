@@ -3,6 +3,8 @@ const fileUpload = require('express-fileupload')
 const session = require('express-session')
 const XLSX = require('xlsx')
 const mkdirp = require('mkdirp')
+const MongoStore = require('connect-mongo')(session);
+const MongoClient = require('mongodb').MongoClient;
 
 const app = express()
 
@@ -11,9 +13,22 @@ var sendFileOptions = {
   root: __dirname + '/views/',
 }
 
+var downloadDir = '/download/';
 var port = process.env.PORT || 3001
 
-var downloadDir = '/download/';
+// Mongodb session options
+var mongoUrl = "mongodb://localhost/cwl207"
+var mongoSessionOptions = {
+  url: mongoUrl,
+  ttl: 7 * 24 * 60 * 60, // = 7 days
+}
+
+// Connect to database
+MongoClient.connect(mongoUrl, (err, db) => {
+  if (err) throw err;
+  console.log("Database created")
+  db.close()
+})
 
 // set up 
 app.set('view engine', 'ejs') // use ejs redner views
@@ -25,6 +40,7 @@ app.use(session({ // use session
   secret: 'cptbtptpbcptdtptp',
   resave: true,
   saveUninitialized: false,
+  store: new MongoStore(mongoSessionOptions), 
 }))
 
 // urls
