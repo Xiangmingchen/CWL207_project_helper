@@ -241,7 +241,7 @@ function buildTheaterToRowMap(worksheet) {
   let row = 2;
 
   while (cell != undefined) {
-    theaterToRow[cell.v] = row
+    theaterToRow[cell.v] = row - 1
     row += 1
     cell = worksheet[col + row];
   }
