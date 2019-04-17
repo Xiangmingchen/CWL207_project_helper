@@ -10,6 +10,7 @@ var searchOptions = {       // search options for Fuse.js
   keys: [ "name" ]
 }
 var date_picker;            // date picker
+var keymap = {}; // You could also use an array
 
 /**
  * Search for theaters in the excel sheet first column, show 
@@ -129,6 +130,15 @@ function enterKeyEntry(e) {
   }
 }
 
+function cmdEnterAddEntry(e) {
+    e = e || event; // to deal with IE
+    keymap[e.keyCode] = e.type == 'keydown';
+
+  if (keymap[13] && keymap[93]) {
+    addEntry()
+  }
+}
+
 function validateInputs() {
   let date = $("#date")[0].value;
   if (!date) {
@@ -169,6 +179,7 @@ function finishAndDownload() {
   })
 }
 
+
 /** 
  * This executes when the html loads
  */
@@ -191,4 +202,6 @@ $(() => {
   $("#add-entry").click(addEntry)
   $("#finish").click(finishAndDownload)
   $("#theater-names").keydown(enterKeyEntry)
+  $(this).keydown(cmdEnterAddEntry)
+  $(this).keyup(cmdEnterAddEntry)
 })
