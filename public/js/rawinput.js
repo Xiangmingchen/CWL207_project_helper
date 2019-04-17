@@ -132,9 +132,9 @@ function enterKeyEntry(e) {
 
 function cmdEnterAddEntry(e) {
     e = e || event; // to deal with IE
-    keymap[e.keyCode] = e.type == 'keydown';
+    keymap[e.key] = e.type == 'keydown';
 
-  if (keymap[13] && keymap[93]) {
+  if (keymap["Enter"] && keymap["Meta"]) {
     addEntry()
   }
 }
