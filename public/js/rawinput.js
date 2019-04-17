@@ -119,6 +119,16 @@ function addEntry() {
   })
 }
 
+function enterKeyEntry(e) {
+  // if enter key is pressed
+  if (e.keyCode === 13) {
+    var firstChoice = $("#theater-dropdown").children()[0]
+    if (firstChoice) {
+      firstChoice.click()
+    }
+  }
+}
+
 function validateInputs() {
   let date = $("#date")[0].value;
   if (!date) {
@@ -180,4 +190,5 @@ $(() => {
 
   $("#add-entry").click(addEntry)
   $("#finish").click(finishAndDownload)
+  $("#theater-names").keydown(enterKeyEntry)
 })
