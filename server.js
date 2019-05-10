@@ -28,7 +28,7 @@ app.use(session({ // use session
 }))
 
 // urls
-app.get('/', (req, res) => {
+app.get('/newspaperreader', (req, res) => {
   res.sendFile('index.html', sendFileOptions)
 })
 
