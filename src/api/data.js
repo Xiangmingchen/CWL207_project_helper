@@ -1,40 +1,18 @@
-const express = require('express')
-const fileUpload = require('express-fileupload')
-const session = require('express-session')
-const XLSX = require('xlsx')
-const mkdirp = require('mkdirp')
-
-const app = express()
+const router = require('express').Router()
 
 // root directory for html
 var sendFileOptions = {
-  root: __dirname + '/views/',
+  root: __dirname + '/../pages/',
 }
 
-var port = process.env.PORT || 3001
-
-var downloadDir = '/download/';
-
-// set up 
-app.set('view engine', 'ejs') // use ejs redner views
-app.use(express.urlencoded({ extended: true })) // use parser to parse request
-app.use(express.json())
-app.use(express.static('public')) // static file folder
-app.use(fileUpload()) // able to upload file
-app.use(session({ // use session
-  secret: 'cptbtptpbcptdtptp',
-  resave: true,
-  saveUninitialized: false,
-}))
-
 // urls
-app.get('/newspaperreader', (req, res) => {
+router.get('/', (req, res) => {
   res.sendFile('index.html', sendFileOptions)
 })
 
 // APIs
 // Input movie and theaters page
-app.post('/rawinput', (req, res) => {
+router.post('/rawinput', (req, res) => {
   if (!req.session.excel) {
     if (!req.files.excel) {
       res.status(500).send('Add excel sheet!') // TODO make error handler
@@ -56,7 +34,7 @@ app.post('/rawinput', (req, res) => {
 })
 
 // return a excel workbook object
-app.get('/excelinfo', (req, res) => {
+router.get('/excelinfo', (req, res) => {
   if (!req.session.excel) {
     throw new Error("No excel sheet uploaded!")
   }
@@ -76,7 +54,7 @@ app.get('/excelinfo', (req, res) => {
  *   ]
  * }
  */
-app.post('/addentry', (req, res) => {
+router.post('/addentry', (req, res) => {
   if (!req.session.entryList) {
     req.session.entryList = []
   }
@@ -137,7 +115,7 @@ app.post('/addentry', (req, res) => {
  * Fill up the excel sheet based on current entry list
  * Write workbook to server and respond with download link
  */
-app.post("/generateExcel", (req, res) => {
+router.post("/generateExcel", (req, res) => {
   // if the current session doesn't have excel
   if (!req.session.excel) {
     res.status(400) .send({
@@ -220,7 +198,7 @@ app.post("/generateExcel", (req, res) => {
   })
 })
 
-app.get('/downloadExcel', (req, res) => {
+router.get('/downloadExcel', (req, res) => {
   if (!req.session.fileName) {
     res.sendStatus(400)
     return
@@ -261,8 +239,4 @@ function daysInMonth (yearMonthSring) {
   return new Date(year, month, 0).getDate();
 }
 
-// port
-app.listen(port, () => {
-  console.log(`App listening on port ${port}`)
-})
-
+module.exports = router
