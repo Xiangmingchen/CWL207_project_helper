@@ -5,16 +5,17 @@ const XLSX = require('xlsx')
 const mkdirp = require('mkdirp')
 
 const app = express()
+const baseUrl = '/datainput'
 
 var port = process.env.PORT || 3001
 
-var downloadDir = '../download/';
+var downloadDir = './download/';
 
 // set up 
 app.set('view engine', 'ejs') // use ejs redner views
 app.use(express.urlencoded({ extended: true })) // use parser to parse request
 app.use(express.json())
-app.use(express.static('src/static')) // static file folder
+app.use(baseUrl, express.static('src/static')) // static file folder
 app.use(fileUpload()) // able to upload file
 app.use(session({ // use session
   secret: 'cptbtptpbcptdtptp',
@@ -23,7 +24,10 @@ app.use(session({ // use session
 }))
 
 // routes
-app.use("/datainput", require('./api/data'))
+app.use(`${baseUrl}`, require('./src/api/data'))
+app.get(`${baseUrl}/helper`, (req, res) => {
+  res.send(require("./src/util"))
+})
 
 // port
 app.listen(port, () => {
