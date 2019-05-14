@@ -23,7 +23,7 @@ app.use(session({ // use session
 }))
 
 // routes
-app.use("/newspaperreader", require('./api/data'))
+app.use("/datainput", require('./api/data'))
 
 // port
 app.listen(port, () => {
