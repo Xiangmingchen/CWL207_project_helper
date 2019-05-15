@@ -10,7 +10,7 @@ var searchOptions = {       // search options for Fuse.js
   keys: [ "name" ]
 }
 var date_picker;            // date picker
-var keymap = {}; // You could also use an array
+var keymap = {};            // record pressed keys
 
 /**
  * Search for theaters in the excel sheet first column, show 
@@ -56,16 +56,8 @@ function fuzzySearchTheater() {
  * @param {function} callback call back function to run after getting the theater names
  */
 function getTheaterNames(callback) {
-  $.get("/excelinfo", (excel) => {
-    var worksheet = excel.Sheets[excel.SheetNames[0]];
-    var cell = worksheet["A2"];
-    var col = "A";
-    allTheaterNames = [];
-    for (let row = 3; cell != undefined; row += 1) {
-      allTheaterNames.push({ name: cell.v })
-      cell = worksheet[col + row];
-    }
-
+  $.get("theaters", (data) => {
+    console.log(data)
     callback()
   })
 }

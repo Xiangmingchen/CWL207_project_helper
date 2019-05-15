@@ -257,4 +257,8 @@ function daysInMonth (yearMonthSring) {
   return new Date(year, month, 0).getDate();
 }
 
+router.get('/*', (req, res) => {
+  res.redirect('newentry')
+})
+
 module.exports = router
