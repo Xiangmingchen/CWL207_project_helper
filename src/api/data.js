@@ -1,50 +1,65 @@
 const router = require('express').Router()
-const db = require('./queries')
+const pg_config = require('./pg_config')
+const pool = new require('pg').Pool(pg_config);
+
+/**
+ * Get all theaters in a city (e.g. Mumbai). If undefined, 
+ * return all theaters.
+ *
+ * @param {string} cityName the name of the city.
+ */
+router.get('/theaters', (req, res) => {
+  pool.query(`
+    SELECT * FROM theaters 
+    ${req.body.cityName ? 
+      'WHERE city_name = ' + req.body.cityName : ''
+    }
+    ORDER BY theater_name;
+  `, (error, results) => {
+    if (error) throw error
+    res.status(200).json(results.rows)
+  })
+})
 
 // root directory for html
 var sendFileOptions = {
   root: __dirname + '/../pages/',
 }
 
+const routes = [
+  {
+    url: "newentry",
+    tabname: "New Entry",
+  },
+  {
+    url: "pastentries",
+    tabname: "Past Entries",
+  },
+]
+
 // urls
-router.get('/', (req, res) => {
-  res.sendFile('index.html', sendFileOptions)
-})
-
-router.get('/theaters', db.getTheaters)
-
-// APIs
-// Input movie and theaters page
-router.post('/rawinput', (req, res) => {
-  if (!req.session.excel) {
-    if (!req.files.excel) {
-      res.status(500).send('Add excel sheet!') // TODO make error handler
-      return
-    }
-    // read in the excel
-    var workbook = XLSX.read(req.files.excel.data, { type: 'buffer' })
-
-    req.session.excel = workbook;
-  }
-
-  // month in the form "1970-01" of string
-  req.session.month = req.body.month
-  req.session.netid = req.body.netid
-
-  res.render('rawinput', {
-    month: req.body.month
+router.get('/newentry', (req, res) => {
+  res.render('NewEntry', {
+    routes: routes,
+    url: 'newentry',
+    username: 'xc14'
   })
 })
 
-// return a excel workbook object
-router.get('/excelinfo', (req, res) => {
-  if (!req.session.excel) {
-    throw new Error("No excel sheet uploaded!")
-  }
-  res.send(req.session.excel)
+/**
+ * Render the movie, theater page for a specific date
+ *
+ * @param {string} date in the format of "yyyy-mm-dd"
+ */
+router.post('/newentrydetail', (req, res) => {
+  res.render('NewEntryDetail', {
+    date: req.body.date,
+    routes: routes,
+    url: 'newentrydetail',
+    username: 'xc14'
+  })
 })
 
-// add entry to entry list
 /**
  * Add entry to entry list. Request should have the following format data
  * {

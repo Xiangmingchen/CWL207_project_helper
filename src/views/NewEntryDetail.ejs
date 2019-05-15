@@ -6,14 +6,15 @@
 
   <title>Indian Newspaper Reader</title>
 
-  <link rel="stylesheet" href="/css/main.css">
-  <link rel="stylesheet" href="/css/rawinput.css">
-  <link rel="stylesheet" href="/css/bootstrap.min.css">
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/rawinput.css">
+  <link rel="stylesheet" href="css/bootstrap.min.css">
   <link rel="stylesheet" href="css/datepicker.min.css">
   <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.1/css/all.css" integrity="sha384-50oBUHEmvpQ+1lW4y57PTFmhCaXp0ML5d60M1M7uH2+nqUivzIebhndOJK28anvf" crossorigin="anonymous">
 </head>
 
 <body>
+  <% include nav %>
   <div class="container pt-4">
     <!-- date -->
     <div class="row">
@@ -21,10 +22,7 @@
         <div class="form-group">
           <label for="date">Date</label>
           <div class="input-group">
-            <div class="input-group-prepend">
-              <span class="input-group-text" id="month"><%= month %></span>
-            </div>
-            <input name="date" class="form-control" type="number" id="date" onchange="hideAlert()" onkeydown="return false;" aria-describedby="date">
+            <input name="date" class="form-control" type="text" id="date" onkeydown="return false;" aria-describedby="date" disabled value="<%= date %>">
           </div>
         </div>
       </div>
@@ -88,12 +86,12 @@
     </div>
 
   </div>
-  <script src="/js/jquery-3.3.1.min.js"></script>
+  <script src="js/jquery-3.3.1.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
-  <script src="/js/bootstrap.min.js"></script>
-  <script src="/js/datepicker.min.js"></script>
-  <script src="/js/fuse.js"></script>
-  <script src="/js/rawinput.js"></script>
+  <script src="js/bootstrap.min.js"></script>
+  <script src="js/datepicker.min.js"></script>
+  <script src="js/fuse.js"></script>
+  <script src="js/rawinput.js"></script>
 
 </body>
 </html>

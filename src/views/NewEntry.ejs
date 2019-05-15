@@ -1,0 +1,49 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+
+  <title>Indian Newspaper Reader</title>
+  <meta name="description" content="Helps read Indian news paper advertisement for movies">
+  <meta name="author" content="Jenny Chen, Miranda Liu">
+
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/bootstrap.min.css">
+  <link rel="stylesheet" href="css/datepicker.min.css">
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.1/css/all.css" integrity="sha384-50oBUHEmvpQ+1lW4y57PTFmhCaXp0ML5d60M1M7uH2+nqUivzIebhndOJK28anvf" crossorigin="anonymous">
+</head>
+
+<body>
+  <% include nav %>
+  <div class="container">
+    <div class="row">
+      <div class="col-12 img-container justify-center">
+
+        <!-- upload files and input date -->
+        <form class="" action="newentrydetail" method="post" id="form-container">
+          <!-- date input -->
+          <div class="text-center">
+            <label for="date-input">Pick the date of newspaper</label>
+          </div>
+          <div class="mt-1">
+            <input name="date" class="form-control" type="text" id="date-input" onkeydown="return false;">
+          </div>
+
+          <!-- start button -->
+          <div class="col-12 mt-3 text-center">
+            <button type="submit" class="btn btn-primary">Next</button>
+          </div>
+
+				</form>
+      </div>
+
+    </div>
+
+  </div>
+  <script src="js/jquery-3.3.1.min.js"></script>
+  <script src="js/datepicker.min.js"></script>
+  <script src="js/main.js"></script>
+  <script src="js/bootstrap.min.js"></script>
+</body>
+</html>

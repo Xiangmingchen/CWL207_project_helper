@@ -184,21 +184,6 @@ function finishAndDownload() {
  * This executes when the html loads
  */
 $(() => {
-  let minDate = new Date($("#month").text() + "-01");
-  minDate.setDate(minDate.getDate() + 1)
-  let maxDate = new Date(minDate);
-  maxDate.setMonth(maxDate.getMonth() + 1)
-  maxDate.setDate(0)
-
-  date_picker = datepicker(document.querySelector("#date"), {
-    formatter: (el, date, instance) => {
-      el.value = date.toISOString().split('T')[0].slice(-2);
-    },
-    minDate: minDate,
-    maxDate: maxDate,
-    dateSelected: minDate
-  })
-
   $("#add-entry").click(addEntry)
   $("#finish").click(finishAndDownload)
   $("#theater-names").keydown(enterKeyEntry)
