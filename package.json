@@ -12,10 +12,12 @@
     "fuse.js": "^3.4.4",
     "mkdirp": "^0.5.1",
     "node-tesseract": "^0.2.7",
+    "pg": "^7.11.0",
     "xlsx": "^0.14.2"
   },
   "devDependencies": {},
   "scripts": {
+    "login-db": "psql -d indiancinema_newspaper_data -U indiancinema_admin",
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "nodemon server.js",
     "start": "node server.js"

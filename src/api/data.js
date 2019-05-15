@@ -1,4 +1,5 @@
 const router = require('express').Router()
+const db = require('./queries')
 
 // root directory for html
 var sendFileOptions = {
@@ -9,6 +10,8 @@ var sendFileOptions = {
 router.get('/', (req, res) => {
   res.sendFile('index.html', sendFileOptions)
 })
+
+router.get('/theaters', db.getTheaters)
 
 // APIs
 // Input movie and theaters page

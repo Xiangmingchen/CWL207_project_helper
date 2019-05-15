@@ -4,3 +4,4 @@ node_modules/
 download/
 *.swp
 *.swo
+src/api/pg_config.js
