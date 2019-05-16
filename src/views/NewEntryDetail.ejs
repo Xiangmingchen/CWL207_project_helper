@@ -32,7 +32,15 @@
       <div class="col-md-6 offset-md-3 col-12">
         <div class="form-group">
           <label for="movie-name">Movie Name</label>
-          <input type="text" class="form-control" id="movie-name" oninput="hideAlert()" aria-describedby="movieName">
+          <div class="dropdown">
+            <input type="text" class="form-control" id="movie-name" oninput="fuzzySearchMovie(); hideAlert()" aria-describedby="movieName">
+            <!-- unclickable drop down toggle, only toggle through js -->
+            <div class="d-none dropdown-toggle" id="movie-dropdown" data-toggle="dropdown"></div>
+            <!-- drop down -->
+            <div class="dropdown-menu" aria-labelledby="movieSearchResult" id="movie-dropdown-content">
+              <div class="text-center">No result</div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -47,9 +55,9 @@
               <input type="text" class="form-control" oninput="fuzzySearchTheater(); hideAlert();" id="theater-names" aria-describedby="TheaterNames" aria-haspopup="true" aria-expanded="false">
 
               <!-- unclickable drop down toggle, only toggle through js -->
-              <div class="d-none dropdown-toggle" data-toggle="dropdown"></div>
+              <div class="d-none dropdown-toggle" id="theater-dropdown" data-toggle="dropdown"></div>
               <!-- drop down -->
-              <div class="dropdown-menu" aria-labelledby="theaterSearchResult" id="theater-dropdown">
+              <div class="dropdown-menu" aria-labelledby="theaterSearchResult" id="theater-dropdown-content">
                 <div class="text-center">No result</div>
               </div>
               <div class="input-group-append">
@@ -85,6 +93,39 @@
       <button class="btn btn-outline-success uniformed-btn" id="finish">Finish and download</button>
     </div>
 
+    <!-- Add Theater Modal -->
+    <div class="modal fade" id="addTheaterModal" tabindex="-1" role="dialog" aria-labelledby="addTheaterModalLabel" aria-hidden="true">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="addTheaterModalLabel">Add Theater</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <div class="form-group">
+              <label for="newTheaterName">Theater Name<span class="text-danger">*</span></label>
+              <input type="text" class="form-control" id="newTheaterName" oninput="hideModalAlert()">
+            </div>
+            <div class="form-group">
+              <label for="newTheaterTown">Town Name</label>
+              <input type="text" class="form-control" id="newTheaterTown" oninput="hideModalAlert()">
+              <small class="form-text text-muted">This usually appears in parentheses after the theater name</small>
+            </div>
+            <!-- error alert -->
+            <div class="row">
+              <div class="col-md-6 offset-md-3 col-12">
+                <div class="alert alert-danger hide-on-load" role="alert" id="modal-error-alert"></div>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-primary" onclick="addNewTheater()">Add</button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
   <script src="js/jquery-3.3.1.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>

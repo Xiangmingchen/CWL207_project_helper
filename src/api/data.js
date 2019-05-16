@@ -21,6 +21,18 @@ router.get('/theaters', (req, res) => {
   })
 })
 
+/**
+ * Get all movies in the database.
+ */
+router.get('/movies', (req, res) => {
+  pool.query(`
+    SELECT * FROM movies;
+  `, (error, results) => {
+    if (error) throw error
+    res.status(200).json(results.rows)
+  })
+})
+
 // root directory for html
 var sendFileOptions = {
   root: __dirname + '/../pages/',
@@ -61,68 +73,17 @@ router.post('/newentrydetail', (req, res) => {
 })
 
 /**
- * Add entry to entry list. Request should have the following format data
+ * Add entry to entry list. Request should have the following format data.
+ * The theater ids are their ids in the database.
  * {
  *   date: "1973-01-01",
  *   movieName: "Rakhi Aur Hathkadi",
- *   theaterNames: [
- *     "Naaz",
- *     "Capitol",
- *     ...
- *   ]
+ *   theaterIds: [ 1, 34, 2, ... ]
  * }
  */
 router.post('/addentry', (req, res) => {
-  if (!req.session.entryList) {
-    req.session.entryList = []
-  }
-
-  /**
-   * Each entry follows this format, entryList is a list of these
-   * {
-   *  date: "1970-03-01",
-   *  movies: [
-   *    { 
-   *      movieName: "Subha-o-Sham",
-   *      theaterNames: [
-   *        "Apsara",
-   *        "Rex",
-   *        "Lotus",
-   *       ]
-   *    },
-   *    ...
-   *  ]}
-   */
-  let dateIndex = undefined;
   let newEntry = req.body;
-  console.log(newEntry)
 
-  // look for the date in the entry list
-  for (let i = 0; i < req.session.entryList.length; i += 1) {
-    if (req.session.entryList[i].date === newEntry.date) {
-      dateIndex = i;
-      break;
-    }
-  }
-  // if we can't find it, add a new entry with that date
-  if (dateIndex === undefined) {
-    let newDateEntry = {
-      date: newEntry.date,
-      movies: [{
-        movieName: newEntry.movieName,
-        theaterNames: newEntry.theaterNames
-      }]
-    }
-    req.session.entryList.push(newDateEntry)
-  }
-  // if we found it, add the new movie to that date
-  else {
-    let newMovieEntry = {
-      movieName: newEntry.movieName,
-      theaterNames: newEntry.theaterNames
-    }
-    req.session.entryList[dateIndex].movies.push(newMovieEntry);
-  }
 
 
   // success
@@ -230,20 +191,6 @@ function sortByDate(array) {
   })
 }
 
-function buildTheaterToRowMap(worksheet) {
-  let cell = worksheet["A2"];
-  let col = "A";
-  let theaterToRow = {};
-  let row = 2;
-
-  while (cell != undefined) {
-    theaterToRow[cell.v] = row - 1
-    row += 1
-    cell = worksheet[col + row];
-  }
-
-  return theaterToRow;
-}
 
 /**
  * Return number of days in a month of a year
