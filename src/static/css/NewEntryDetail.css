@@ -4,8 +4,3 @@
 .hover-delete:hover {
   text-decoration: line-through !important;
 }
-.sticky {
-  position: fixed;
-  top: 0;
-  width: 100%;
-}

@@ -254,11 +254,12 @@ function addEntry() {
   }
 
   let entry = {
-    date: $("#date").text(),
+    date: $("#date").val(),
     movie: currMovie,
     theaterIds: currTheaterIds,
+    newTheaters: currNewTheaters,
   }
-  $.post("/addentry", entry, (data, status) => {
+  $.post("addentry", entry, (data, status) => {
     // clear form
     $("#theater-names-conatiner").empty();
     $("#theater-names").val("")

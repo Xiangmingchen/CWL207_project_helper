@@ -9,14 +9,11 @@ const pool = new require('pg').Pool(pg_config);
  * @param {string} cityName the name of the city.
  */
 router.get('/theaters', (req, res) => {
-  pool.query(`
-    SELECT * FROM theaters 
-    ${req.body.cityName ? 
-      'WHERE city_name = ' + req.body.cityName : ''
-    }
-    ORDER BY theater_name;
-  `, (error, results) => {
-    if (error) throw error
+  let query = {
+    name: 'get-theaters',
+    text: "SELECT * FROM theaters ORDER BY theater_name;",
+  }
+  pool.query(query, (error, results) => {
     res.status(200).json(results.rows)
   })
 })
@@ -25,19 +22,17 @@ router.get('/theaters', (req, res) => {
  * Get all movies in the database.
  */
 router.get('/movies', (req, res) => {
-  pool.query(`
-    SELECT * FROM movies;
-  `, (error, results) => {
+  let query = {
+    name: 'get-movies',
+    text: "SELECT * FROM movies;"
+  }
+  pool.query(query, (error, results) => {
     if (error) throw error
     res.status(200).json(results.rows)
   })
 })
 
-// root directory for html
-var sendFileOptions = {
-  root: __dirname + '/../pages/',
-}
-
+// for nav bar
 const routes = [
   {
     url: "newentry",
@@ -49,12 +44,13 @@ const routes = [
   },
 ]
 
-// urls
+// new entry page
 router.get('/newentry', (req, res) => {
+  req.session.netid = 'fake_netid'
   res.render('NewEntry', {
     routes: routes,
     url: 'newentry',
-    username: 'xc14'
+    username: req.session.netid
   })
 })
 
@@ -68,7 +64,7 @@ router.post('/newentrydetail', (req, res) => {
     date: req.body.date,
     routes: routes,
     url: 'newentrydetail',
-    username: 'xc14'
+    username: req.session.netid
   })
 })
 
@@ -77,135 +73,157 @@ router.post('/newentrydetail', (req, res) => {
  * The theater ids are their ids in the database.
  * {
  *   date: "1973-01-01",
- *   movieName: "Rakhi Aur Hathkadi",
+ *   movie: {
+ *     id: 32 (or null if the movie is new),
+ *     name: "Rakhi Aur Hathkadi" (if id is not null, name does not matter),
+ *   }
  *   theaterIds: [ 1, 34, 2, ... ]
+ *   newTheaters: [
+ *     {
+ *       theater_name: "Deepak",
+ *       town_name: "Delisle Road",
+ *     },
+ *     ...
+ *   ]
  * }
  */
 router.post('/addentry', (req, res) => {
   let newEntry = req.body;
+  let query;
 
+  // sanity checks
+  if (!newEntry.movie.id && !newEntry.movie.name) throw 'Movie name and id are empty'
 
+  // add netid as a property
+  newEntry.netid = req.session.netid
 
-  // success
-  res.sendStatus(200)
+  if (!newEntry.theaterIds) {
+    newEntry.theaterIds = []
+  }
+
+  // insert the movie into database if it's new
+  if (!newEntry.movie.id) {
+    newEntry.movie.name = titleCase(newEntry.movie.name)
+    query = {
+      text: 'INSERT INTO movies (name) VALUES ($1) RETURNING *;',
+      values: [ newEntry.movie.name ]
+    }
+    pool.query(query).then((result) => { 
+      newEntry.movie.id = result.rows[0].id
+      addTheaters(newEntry, res) 
+    })
+  }
+  // if this movie was in database
+  else {
+    addTheaters(newEntry, res)
+  }
+
 })
 
 /**
- * Fill up the excel sheet based on current entry list
- * Write workbook to server and respond with download link
+ * Add new theaters to database when necessary
  */
-router.post("/generateExcel", (req, res) => {
-  // if the current session doesn't have excel
-  if (!req.session.excel) {
-    res.status(400) .send({
-        message: "Please reupload excel template",
-        code: 1,
+function addTheaters(newEntry, res) {
+  // insert the new theater into database 
+  if (newEntry.newTheaters && newEntry.newTheaters.length > 0) {
+    let text = "INSERT INTO theaters (theater_name, town_name, city_name) VALUES (";
+    for (let i = 0; i < newEntry.newTheaters.length; i++) {
+      let j = i * 3 + 1;
+      text += `$${j}, $${j+1}, $${j+2}`
+      if (i != newEntry.newTheaters.length - 1) {
+        text += "), ("
+      } else {
+        text += ")"
+      }
+    }
+    text += " RETURNING id;"
+
+    let values = []
+    newEntry.newTheaters.forEach((elem) => {
+      if (!elem.theater_name) throw "Theater name is empty"
+      values.push(elem.theater_name)
+      values.push(elem.town_name)
+      // TODO: Notice that Mumbai is HARD CODED to be the city
+      values.push("Mumbai")
+    })
+    let query = { text: text, values: values }
+    pool.query(query).then((result) => {
+      result.rows.forEach((row) => {
+        newEntry.theaterIds.push(row.id)
       })
-    return
+      createEntry(newEntry, res)
+    })
+  }
+  // there is no new theaters
+  else {
+    createEntry(newEntry, res)
+  }
+}
+
+// record this entry
+function createEntry(newEntry, res) {
+  if (!newEntry.netid) throw "Not logged in!"
+
+  let query = {
+    text: "INSERT INTO entries (user_netid) VALUES ($1) RETURNING id;",
+    values: [ newEntry.netid ],
   }
 
-  // get first worksheet
-  var workbook = req.session.excel;
-  var worksheet = workbook.Sheets[workbook.SheetNames[0]];
-  // create theater to row number map if we don't have one
-  if (!req.session.theaterToRow) {
-    req.session.theaterToRow = buildTheaterToRowMap(worksheet)
-  }
+  pool.query(query).then((result) => {
+    newEntry.entryId = result.rows[0].id
+    addShowings(newEntry, res)
+  }).catch((e) => {throw e.message})
+}
 
-  // overwrite the first row 
-  let secondDayOfMon = new Date(req.session.month + "-02Z");
-  let UTCString = secondDayOfMon.toUTCString().split(" ");
-  for (let col = 1; col < daysInMonth(req.session.month) + 1; col += 1) {
-    let topCell = worksheet[XLSX.utils.encode_cell({ r: 0, c: col })]
-    if (!topCell) {
-      worksheet[XLSX.utils.encode_cell({ r: 0, c: col })] = {}
-      topCell = worksheet[XLSX.utils.encode_cell({ r: 0, c: col })];
-    }
-    let dateString = [ col, UTCString[2], UTCString[3].slice(2) ].join("-")
-    topCell.v = dateString;
-  }
-
-  // delete everything that's after the last day of month on the 
-  // first row
-  for (let col = daysInMonth(req.session.month) + 1; col <= XLSX.utils.decode_range(worksheet['!ref']).e.c; col += 1) {
-    let topCell = worksheet[XLSX.utils.encode_cell({ r: 0, c: col })]
-    if (topCell) {
-      topCell.v = "";
-    }
-  }
-
-  // write the movies to the excel sheet
-  if (req.session.entryList) {
-    // sort the array by date
-    sortByDate(req.session.entryList)
-
-    let entryList = req.session.entryList;
-    let theaterToRow = req.session.theaterToRow;
-
-    // loop through each date
-    for (let i = 0; i < entryList.length; i += 1) {
-      // write date to top cell
-      let date = new Date(entryList[i].date + "Z");
-      let UTCString = date.toUTCString().split(" ");
-      let col = parseInt(UTCString[1])
-
-      // loop through each movie
-      entryList[i].movies.forEach((movie) => {
-        // loop through each theater
-        movie.theaterNames.forEach((theaterName) => {
-          // write movie name to that cell
-          let row = theaterToRow[theaterName];
-          let cellAddress = XLSX.utils.encode_cell({ r: row, c: col });
-          if (!worksheet[cellAddress]) {
-            worksheet[cellAddress] = { t: 's' }
-          }
-          worksheet[cellAddress].v = movie.movieName
-        })
-      })
+// insert each movie - theater pair as a showing on this date
+function addShowings(newEntry, res) {
+  let text = `INSERT INTO showings (show_date, movies_id, newspapers_id,
+    theaters_id, entries_id) VALUES (`
+  for (let i = 0; i < newEntry.theaterIds.length; i++) {
+    let j = i * 5 + 1;
+    text += `$${j}, $${j+1}, $${j+2}, $${j+3}, $${j+4}, $${j+5}`
+    if (i != newEntry.theaterIds.length - 1) {
+      text += "), ("
+    } else {
+      text += ")"
     }
   }
+  text += ";"
 
-  // write to file, make directory if necessory
-  mkdirp('download', (err) => {
-    if (err) {
-      throw err;
-    }
-    let fileName = __dirname + downloadDir + req.session.netid + "_main.xlsx";
-    req.session.fileName = fileName;
-    XLSX.writeFile(workbook, fileName) 
+  let values = []
+  newEntry.theaterIds.forEach((theaterId) => {
+    if (isNaN(theaterId)) throw "Theater id is not a number"
+    values.push(newEntry.date) // show_date
+    values.push(newEntry.movie.id) // movies_id
+    // TODO: Notice that newspaper id is HARD CODED 
+    values.push(1) // newspapers_id
+    values.push(theaterId) // theaters_id
+    values.push(entryId) // entries_id
+  })
+  let query = { text: text, values: values }
+  pool.query(query).then((res) => {
+    // success
     res.sendStatus(200)
-  })
-})
-
-router.get('/downloadExcel', (req, res) => {
-  if (!req.session.fileName) {
-    res.sendStatus(400)
-    return
-  }
-  res.download(req.session.fileName);
-})
-
-function sortByDate(array) {
-  array.sort((a, b) => {
-    return new Date(a.date) > new Date(b.date)
-  })
+  }).catch((e) => { throw e.message })
 }
 
-
-/**
- * Return number of days in a month of a year
- *
- * @param {string} month a string in the form "yyyy-mm"
- * @returns {number} number of days in this month
- */
-function daysInMonth (yearMonthSring) {
-  let year = parseInt(yearMonthSring.slice(0, 4))
-  let month = parseInt(yearMonthSring.slice(-2))
-  return new Date(year, month, 0).getDate();
-}
 
 router.get('/*', (req, res) => {
   res.redirect('newentry')
 })
+
+/**
+ * Turn a string into title case
+ */
+function titleCase(str) {
+  str = str.toLowerCase().trim();
+  str = str.split(' ');
+  str = str.filter((string) => { return string !== "" })
+
+  for (var i = 0; i < str.length; i++) {
+    str[i] = str[i].charAt(0).toUpperCase() + str[i].slice(1);
+  }
+  return str.join(' '); 
+}
 
 module.exports = router
