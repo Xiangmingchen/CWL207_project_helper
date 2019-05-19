@@ -27,7 +27,7 @@ router.get('/movies', (req, res) => {
     text: "SELECT * FROM movies;"
   }
   pool.query(query, (error, results) => {
-    if (error) throw error
+    if (error) res.status(400).send( error )
     res.status(200).json(results.rows)
   })
 })
@@ -92,7 +92,7 @@ router.post('/addentry', (req, res) => {
   let query;
 
   // sanity checks
-  if (!newEntry.movie.id && !newEntry.movie.name) throw 'Movie name and id are empty'
+  if (!newEntry.movie.id && !newEntry.movie.name) res.status(400).send( 'Movie name and id are empty' )
 
   // add netid as a property
   newEntry.netid = req.session.netid
@@ -104,65 +104,88 @@ router.post('/addentry', (req, res) => {
   // insert the movie into database if it's new
   if (!newEntry.movie.id) {
     newEntry.movie.name = titleCase(newEntry.movie.name)
+    // check whetehr there was a movie with the same name
     query = {
-      text: 'INSERT INTO movies (name) VALUES ($1) RETURNING *;',
+      text: 'SELECT * FROM movies WHERE name = $1;',
       values: [ newEntry.movie.name ]
     }
-    pool.query(query).then((result) => { 
-      newEntry.movie.id = result.rows[0].id
-      addTheaters(newEntry, res) 
-    })
+    pool.query(query).then((result) => {
+      // this movie was in the database
+      if (result.rows.length > 0) { 
+        newEntry.movie.id = result.rows[0].id
+        addANewTheater(newEntry, res, 0)
+      }
+      // this movie is new
+      else {
+        query = {
+          text: 'INSERT INTO movies (name) VALUES ($1) RETURNING *;',
+          values: [ newEntry.movie.name ]
+        }
+        pool.query(query).then((result) => { 
+          newEntry.movie.id = result.rows[0].id
+          addANewTheater(newEntry, res, 0)
+        })
+      }
+    }).catch((e) => {res.status(400).send( e.message) })
+
   }
   // if this movie was in database
   else {
-    addTheaters(newEntry, res)
+    addANewTheater(newEntry, res, 0)
   }
 
 })
 
 /**
- * Add new theaters to database when necessary
+ * Add the new theater at index theaterIdx. If there is no more theaters
+ * to add, move on to add entry.
+ * For each theater, check whether it is already in the database.
  */
-function addTheaters(newEntry, res) {
-  // insert the new theater into database 
-  if (newEntry.newTheaters && newEntry.newTheaters.length > 0) {
-    let text = "INSERT INTO theaters (theater_name, town_name, city_name) VALUES (";
-    for (let i = 0; i < newEntry.newTheaters.length; i++) {
-      let j = i * 3 + 1;
-      text += `$${j}, $${j+1}, $${j+2}`
-      if (i != newEntry.newTheaters.length - 1) {
-        text += "), ("
-      } else {
-        text += ")"
-      }
-    }
-    text += " RETURNING id;"
-
-    let values = []
-    newEntry.newTheaters.forEach((elem) => {
-      if (!elem.theater_name) throw "Theater name is empty"
-      values.push(elem.theater_name)
-      values.push(elem.town_name)
-      // TODO: Notice that Mumbai is HARD CODED to be the city
-      values.push("Mumbai")
-    })
-    let query = { text: text, values: values }
-    pool.query(query).then((result) => {
-      result.rows.forEach((row) => {
-        newEntry.theaterIds.push(row.id)
-      })
-      createEntry(newEntry, res)
-    })
-  }
-  // there is no new theaters
-  else {
+function addANewTheater(newEntry, res, theaterIdx) {
+  // if there are no more theaters to add
+  if (!newEntry.newTheaters || theaterIdx == newEntry.newTheaters.length) {
     createEntry(newEntry, res)
+    return
   }
+  var currTheater = newEntry.newTheaters[theaterIdx];
+  currTheater.theater_name = titleCase(currTheater.theater_name)
+  // note that if town name is provided as null, this will turn it into emptry string
+  currTheater.town_name = titleCase(currTheater.town_name)
+
+  // check whether the current theater is in database
+  var values = [ currTheater.theater_name,
+                 currTheater.town_name,
+                 'Mumbai', // TODO city is hard coded
+               ]
+  let query = {
+    text: `SELECT * FROM theaters WHERE theater_name = $1 
+          AND town_name = $2 AND city_name = $3;`,
+    values: values
+  }
+  pool.query(query).then((result) => { 
+    // this theater already in database
+    if (result.rows.length > 0) {
+      newEntry.theaterIds.push(result.rows[0].id)
+      addANewTheater(newEntry, res, theaterIdx + 1)
+    }
+    // insert this theater
+    else {
+      query = {
+        text:  "INSERT INTO theaters (theater_name, town_name, city_name) VALUES ($1, $2, $3) RETURNING id;",
+        values: values
+      }
+      pool.query(query).then((result) => {
+        newEntry.theaterIds.push(result.rows[0].id)
+        addANewTheater(newEntry, res, theaterIdx + 1)
+      })
+    }
+  }).catch((e) => {res.status(400).send( e.message) })
+
 }
 
 // record this entry
 function createEntry(newEntry, res) {
-  if (!newEntry.netid) throw "Not logged in!"
+  if (!newEntry.netid) res.status(400).send( "Not logged in!" )
 
   let query = {
     text: "INSERT INTO entries (user_netid) VALUES ($1) RETURNING id;",
@@ -172,7 +195,7 @@ function createEntry(newEntry, res) {
   pool.query(query).then((result) => {
     newEntry.entryId = result.rows[0].id
     addShowings(newEntry, res)
-  }).catch((e) => {throw e.message})
+  }).catch((e) => {res.status(400).send( e.message) })
 }
 
 // insert each movie - theater pair as a showing on this date
@@ -181,7 +204,7 @@ function addShowings(newEntry, res) {
     theaters_id, entries_id) VALUES (`
   for (let i = 0; i < newEntry.theaterIds.length; i++) {
     let j = i * 5 + 1;
-    text += `$${j}, $${j+1}, $${j+2}, $${j+3}, $${j+4}, $${j+5}`
+    text += `$${j}, $${j+1}, $${j+2}, $${j+3}, $${j+4}`
     if (i != newEntry.theaterIds.length - 1) {
       text += "), ("
     } else {
@@ -192,19 +215,19 @@ function addShowings(newEntry, res) {
 
   let values = []
   newEntry.theaterIds.forEach((theaterId) => {
-    if (isNaN(theaterId)) throw "Theater id is not a number"
+    if (isNaN(theaterId)) res.status(400).send( "Theater id is not a number" )
     values.push(newEntry.date) // show_date
     values.push(newEntry.movie.id) // movies_id
     // TODO: Notice that newspaper id is HARD CODED 
     values.push(1) // newspapers_id
     values.push(theaterId) // theaters_id
-    values.push(entryId) // entries_id
+    values.push(newEntry.entryId) // entries_id
   })
   let query = { text: text, values: values }
-  pool.query(query).then((res) => {
+  pool.query(query).then((result) => {
     // success
     res.sendStatus(200)
-  }).catch((e) => { throw e.message })
+  }).catch((e) => { res.status(400).send( e.message )})
 }
 
 

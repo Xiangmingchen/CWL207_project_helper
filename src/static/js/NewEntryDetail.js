@@ -1,6 +1,6 @@
 var theaterData;        // a list of all theater names for search
-var currMovie;          // the movie object, with properties: id, name
 var movieData;          // a list of all movie names for search
+var currMovie;          // the movie object, with properties: id, name
 var currTheaterIds = [];  // theaters that the user have chosen, with id and name
 var currNewTheaters = [];   // a list of new theaters associated with current entry
 var date_picker;            // date picker
@@ -46,7 +46,7 @@ function fuzzySearchTheater() {
   }
 
   // add the button to add a new theater
-  if (result.length < 1 || input.toLowerCase() !== firstText.toLowerCase()) {
+  if ((result.length < 1 || input.toLowerCase() !== firstText.toLowerCase()) && input.length > 0) {
     dropdown.append(`<div class="dropdown-item pl-3 text-primary add-theater-popup" data-toggle="modal" data-target="#addTheaterModal"><i class="fas fa-plus mr-2"></i>${titleCase(input)}</div>`)
   }
 
@@ -263,10 +263,16 @@ function addEntry() {
     // clear form
     $("#theater-names-conatiner").empty();
     $("#theater-names").val("")
-    $("#movie-name").val("")
+    $("#movie-name").val("").removeClass("border-success")
     currTheaterIds = [];
+    currNewTheaters = [];
+    currMovie = null;
+    getData()
+    
     // show success
     $("#success-alert").show();
+  }).fail((jqXhr, text, error) => {
+    displayError(jqXhr.responseText)
   })
 }
 
@@ -319,22 +325,11 @@ function displayError(message) {
   $("#error-alert").text(message).show()
 }
 
-function finishAndDownload() {
-  $.post("/generateExcel", (fileName) => {
-    window.open('/downloadExcel')
-  }).catch((xhr) => {
-    let error = xhr.responseJSON
-    if (error.code == 1) {
-      displayError(error.message)
-    }
-  })
+function changeDate() {
+  window.location.replace("newentry");
 }
 
-
-/** 
- * This executes when the html loads
- */
-$(() => {
+function getData() {
   // get all theaters
   $.get("theaters", (data) => {
     theaterData = data
@@ -343,8 +338,16 @@ $(() => {
   $.get("movies", (data) => {
     movieData = data
   })
+}
+
+
+/** 
+ * This executes when the html loads
+ */
+$(() => {
+  getData()
   $("#add-entry").click(addEntry)
-  $("#finish").click(finishAndDownload)
+  $("#change-date").click(changeDate)
   $("#theater-names").keydown(enterKeyEntry)
   $(this).keydown(cmdEnterAddEntry)
   $(this).keyup(cmdEnterAddEntry)
